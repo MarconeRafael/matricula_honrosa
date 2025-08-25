@@ -1,132 +1,125 @@
-<!doctype html>
-<html lang="pt-br">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pré-Matrícula Honrosa — Teste Solver</title>
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
-      <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">Pré-Matrícula Honrosa — Teste</span>
-      </div>
-    </nav>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Pré-Matrícula Honrosa</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <main class="container">
-      <div class="row">
-        <div class="col-md-6">
-          <h5>Executar instância de exemplo</h5>
-          <p>Roda o solver com uma instância pequena de teste (não requer upload).</p>
-          <button id="btn-sample" class="btn btn-primary">Rodar Instância Exemplo</button>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            background-color: #ffffffaa;
+            padding: 25px 0;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            color: #0083b0;
+        }
+
+        .card button {
+            padding: 12px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            background-color: #00b4db;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .card button:hover {
+            background-color: #0083b0;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 15px 0;
+            color: white;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>Pré-Matrícula Honrosa</header>
+
+    <main>
+        <div class="card">
+            <h2>Alunos</h2>
+            <p>Gerencie informações dos alunos.</p>
+            <button onclick="window.location.href='/aluno/'">Acessar</button>
         </div>
-
-        <div class="col-md-6">
-          <h5>Enviar instância personalizada (JSON)</h5>
-          <p>Cole um JSON com as chaves <code>turmas</code>, <code>salas</code>, <code>timeslots</code>, <code>professors</code> e opcional <code>turma_weights</code>.</p>
-          <textarea id="json-input" class="form-control mb-2" rows="8">{
-  "turmas": [
-    {"id":101, "codigo":"BCC101", "numero_alunos":30, "precisa_computador":false, "professor_id":1},
-    {"id":102, "codigo":"BCC102", "numero_alunos":20, "precisa_computador":true,  "professor_id":1},
-    {"id":103, "codigo":"BCC103", "numero_alunos":18, "precisa_computador":true,  "professor_id":2}
-  ],
-  "salas": [
-    {"id":1, "nome":"Sala A", "capacidade":40, "tem_computador":true},
-    {"id":2, "nome":"Sala B", "capacidade":25, "tem_computador":false},
-    {"id":3, "nome":"Lab TI", "capacidade":20, "tem_computador":true}
-  ],
-  "timeslots": [
-    {"id":1, "descricao":"Segunda/M1"}, {"id":2, "descricao":"Segunda/M2"}, {"id":3, "descricao":"Terca/M1"}
-  ],
-  "professors": [ {"id":1, "nome":"Prof A"}, {"id":2, "nome":"Prof B"} ],
-  "turma_weights": {"102":10}
-}</textarea>
-          <button id="btn-send" class="btn btn-success">Enviar JSON e Rodar Solver</button>
+        <div class="card">
+            <h2>Coordenadores</h2>
+            <p>Visualize e edite coordenadores.</p>
+            <button onclick="window.location.href='/coord/'">Acessar</button>
         </div>
-      </div>
-
-      <hr />
-
-      <div class="row">
-        <div class="col-12">
-          <h5>Resultado</h5>
-          <div id="alerts"></div>
-          <div id="result-area">
-            <table class="table table-sm table-striped" id="result-table" style="display:none;">
-              <thead>
-                <tr>
-                  <th>Turma</th>
-                  <th>Sala</th>
-                  <th>Timeslot</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+        <div class="card">
+            <h2>Professores</h2>
+            <p>Gerencie dados de professores.</p>
+            <button onclick="window.location.href='/professor/'">Acessar</button>
         </div>
-      </div>
-
+        <div class="card">
+            <h2>Visualizações</h2>
+            <p>Acesse relatórios e dashboards.</p>
+            <button onclick="window.location.href='/view/'">Acessar</button>
+        </div>
+        <div class="card">
+            <h2>Status da API</h2>
+            <p>Verifique se o servidor está funcionando.</p>
+            <button onclick="window.location.href='/api'">Acessar</button>
+        </div>
     </main>
 
-    <script>
-      const base = '';
-
-      function showAlert(msg, type='info'){
-        const el = document.getElementById('alerts');
-        el.innerHTML = `<div class="alert alert-${type}" role="alert">${msg}</div>`;
-      }
-
-      function clearAlert(){ document.getElementById('alerts').innerHTML = ''; }
-
-      function renderResult(allocs, turmas, salas, timeslots){
-        const tbody = document.querySelector('#result-table tbody');
-        tbody.innerHTML = '';
-        const turmaMap = {};
-        const salaMap = {};
-        const tsMap = {};
-        (turmas||[]).forEach(t=> turmaMap[t.id] = t);
-        (salas||[]).forEach(s=> salaMap[s.id] = s);
-        (timeslots||[]).forEach(ts=> tsMap[ts.id] = ts);
-
-        allocs.forEach(a=>{
-          const tr = document.createElement('tr');
-          const tname = turmaMap[a.turma_id] ? (turmaMap[a.turma_id].codigo||a.turma_id) : a.turma_id;
-          const sname = salaMap[a.sala_id] ? salaMap[a.sala_id].nome : a.sala_id;
-          const tsname = tsMap[a.timeslot_id] ? tsMap[a.timeslot_id].descricao : a.timeslot_id;
-          tr.innerHTML = `<td>${tname}</td><td>${sname}</td><td>${tsname}</td>`;
-          tbody.appendChild(tr);
-        });
-        document.getElementById('result-table').style.display = allocs.length? 'table' : 'none';
-      }
-
-      document.getElementById('btn-sample').addEventListener('click', async ()=>{
-        clearAlert();
-        showAlert('Executando solver (exemplo)... Aguarde.','info');
-        try{
-          const r = await fetch(base + '/api/test-solve');
-          const j = await r.json();
-          if(!r.ok){ showAlert(j.detail||JSON.stringify(j), 'danger'); return; }
-          showAlert('Solver retornou: ' + j.status, 'success');
-          renderResult(j.allocations || [], j.turmas || [], j.salas || [], j.timeslots || []);
-        }catch(e){ showAlert('Erro: '+e.message,'danger'); }
-      });
-
-      document.getElementById('btn-send').addEventListener('click', async ()=>{
-        clearAlert();
-        showAlert('Enviando instância ao solver...','info');
-        let bodyText = document.getElementById('json-input').value;
-        try{
-          const payload = JSON.parse(bodyText);
-          const r = await fetch(base + '/api/solve', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-          const j = await r.json();
-          if(!r.ok){ showAlert(j.detail||JSON.stringify(j), 'danger'); return; }
-          showAlert('Solver retornou: ' + j.status, 'success');
-          renderResult(j.allocations || [], payload.turmas || [], payload.salas || [], payload.timeslots || []);
-        }catch(e){ showAlert('Erro: '+e.message,'danger'); }
-      });
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+    <footer>
+        &copy; 2025 Pré-Matrícula Honrosa. Todos os direitos reservados.
+    </footer>
+</body>
 </html>

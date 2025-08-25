@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from app.database import Base  
+from .database import Base
+
 # Tabela auxiliar para relacionamento N:N Turma-Professor
 turma_professor = Table(
     "turma_professor",
