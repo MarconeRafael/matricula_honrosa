@@ -7,8 +7,8 @@ from app import models
 
 router = APIRouter(prefix="/aluno", tags=["aluno"])
 
-# Configura Jinja2 para servir HTML do templates/
-templates = Jinja2Templates(directory="app/templates")  # criar pasta app/templates com HTML
+# Jinja2 busca HTML em app/templates
+templates = Jinja2Templates(directory="app/templates")
 
 def get_db():
     db = SessionLocal()
@@ -17,12 +17,12 @@ def get_db():
     finally:
         db.close()
 
-# Rota para servir a tela de questionário interativo
+# Rota: questionário interativo
 @router.get("/questionario", response_class=HTMLResponse)
 def questionario(request: Request):
     return templates.TemplateResponse("questionariointerativo.html", {"request": request})
 
-# Rota para salvar expectativas de turmas do aluno
+# Rota: salvar expectativas
 @router.post("/expectativa")
 def submit_expectativa(payload: dict, db: Session = Depends(get_db)):
     if "aluno_id" not in payload or "preferencias" not in payload:
@@ -34,7 +34,7 @@ def submit_expectativa(payload: dict, db: Session = Depends(get_db)):
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado")
 
-    # calcula soma de carga_horaria considerando cada turma apenas uma vez
+    # soma carga horária (sem repetir turmas)
     turma_ids = set()
     total_horas = 0
     for p in prefs:
@@ -49,7 +49,7 @@ def submit_expectativa(payload: dict, db: Session = Depends(get_db)):
     if total_horas > 480:
         raise HTTPException(status_code=400, detail=f"Limite excedido: carga total {total_horas}h > 480h")
 
-    # limpa preferências antigas do aluno e grava as novas
+    # substitui preferências antigas
     db.query(models.PreferenciaAluno).filter(models.PreferenciaAluno.aluno_id == aluno_id).delete()
     for p in prefs:
         pref = models.PreferenciaAluno(
@@ -63,7 +63,7 @@ def submit_expectativa(payload: dict, db: Session = Depends(get_db)):
 
     return {"status": "saved", "total_horas": total_horas, "count": len(prefs)}
 
-# Rota para obter preferências de um aluno
+# Rota: obter preferências do aluno
 @router.get("/me/{aluno_id}")
 def my_preferences(aluno_id: int, db: Session = Depends(get_db)):
     aluno = db.get(models.Aluno, aluno_id)
@@ -80,3 +80,8 @@ def my_preferences(aluno_id: int, db: Session = Depends(get_db)):
         } for p in prefs
     ]
     return {"aluno_id": aluno_id, "preferencias": out}
+
+# Rota raiz: /aluno/
+@router.get("/", response_class=HTMLResponse)
+def aluno_index(request: Request):
+    return templates.TemplateResponse("questionariointerativo.html", {"request": request})

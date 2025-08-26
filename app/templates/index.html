@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Pré-Matrícula Honrosa{% endblock %}
+
+{% block content %}
+<header>Pré-Matrícula Honrosa</header>
+
+<main>
+    <div class="card">
+        <h2>Alunos</h2>
+        <p>Gerencie informações dos alunos.</p>
+        <button onclick="window.location.href='/aluno/'">Acessar</button>
+    </div>
+    <div class="card">
+        <h2>Coordenadores</h2>
+        <p>Visualize e edite coordenadores.</p>
+        <button onclick="window.location.href='/coord/'">Acessar</button>
+    </div>
+    <div class="card">
+        <h2>Professores</h2>
+        <p>Gerencie dados de professores.</p>
+        <button onclick="window.location.href='/professor/'">Acessar</button>
+    </div>
+    <div class="card">
+        <h2>Visualizações</h2>
+        <p>Acesse relatórios e dashboards.</p>
+        <button onclick="window.location.href='/view/'">Acessar</button>
+    </div>
+    <div class="card">
+        <h2>Status da API</h2>
+        <p>Verifique se o servidor está funcionando.</p>
+        <button onclick="window.location.href='/api'">Acessar</button>
+    </div>
+</main>
+
+<footer>
+    &copy; 2025 Pré-Matrícula Honrosa. Todos os direitos reservados.
+</footer>
+{% endblock %}

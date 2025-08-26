@@ -13,8 +13,7 @@ from app import models
 
 router = APIRouter(prefix="/coord", tags=["coord"])
 
-# Configura Jinja2 para servir HTML do static/
-templates = Jinja2Templates(directory="static")
+templates = Jinja2Templates(directory="app/templates")
 
 DATA_REQ_FILE = Path("data/association_requests.json")
 DATA_REQ_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -216,3 +215,10 @@ def review_request(payload: dict, db: Session = Depends(get_db)):
             t.professores.append(p)
             db.commit()
     return {"status": "reviewed", "action": action}
+# ---------- ROTA RAIZ ----------
+@router.get("/", response_class=HTMLResponse)
+def coord_index(request: Request):
+    """
+    Página inicial do coordenador
+    """
+    return templates.TemplateResponse("cadastro_associação_turmas.html", {"request": request})

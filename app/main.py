@@ -1,14 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 from app.routes import aluno, coord, professor, view
-from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="API Pré-Matrícula Honrosa")
 
-# Incluindo os routers
-app.include_router(aluno.router, prefix="/aluno", tags=["Aluno"])
-app.include_router(coord.router, prefix="/coord", tags=["Coord"])
-app.include_router(professor.router, prefix="/professor", tags=["Professor"])
-app.include_router(view.router, prefix="/view", tags=["View"])
+# Registrando routers
+app.include_router(aluno.router)
+app.include_router(coord.router)
+app.include_router(professor.router)
+app.include_router(view.router)
 
-# Serve front-end
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+# Configurando Jinja2 para templates
+templates = Jinja2Templates(directory="app/templates")
+
+# Rota para a página inicial
+@app.get("/", response_class=None)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})

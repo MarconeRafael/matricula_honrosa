@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Aluno - Expectativa de Matrícula</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-  .timeslot { border: 1px solid #ccc; height: 60px; margin-bottom: 5px; }
-  .discipline { padding: 5px; margin: 2px; background-color: #0d6efd; color: white; cursor: grab; }
-  .timeslot.over { background-color: #d1e7dd; }
-</style>
-</head>
-<body class="p-4">
+{% extends "base.html" %}
+
+{% block title %}Aluno - Expectativa de Matrícula{% endblock %}
+
+{% block content %}
 <div class="container">
   <h1>Questionário Interativo de Expectativa</h1>
   <p>Arraste as disciplinas para os horários desejados. Limite máximo: 480h.</p>
@@ -49,7 +41,9 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 let dragged;
 document.addEventListener('dragstart', e => { if(e.target.classList.contains('discipline')) dragged = e.target; });
@@ -66,5 +60,4 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     .then(res=>res.json()).then(data=>alert('Expectativa enviada com sucesso!'));
 });
 </script>
-</body>
-</html>
+{% endblock %}

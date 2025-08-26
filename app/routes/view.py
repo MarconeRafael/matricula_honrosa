@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse  
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from collections import defaultdict
@@ -7,9 +8,7 @@ from app import models
 
 router = APIRouter(prefix="/view", tags=["view"])
 
-# Configura Jinja2 para servir HTML do static/
-templates = Jinja2Templates(directory="static")
-
+templates = Jinja2Templates(directory="app/templates")
 def get_db():
     db = SessionLocal()
     try:
@@ -54,3 +53,10 @@ def expectativa_aggregada(db: Session = Depends(get_db)):
     # ordena por demanda decrescente
     out = sorted(out, key=lambda x: x["count"], reverse=True)
     return {"aggregated_preferences": out}
+# ---------- ROTA RAIZ ----------
+@router.get("/", response_class=HTMLResponse)
+def view_index(request: Request):
+    """
+    Página inicial da seção de visualizações.
+    """
+    return templates.TemplateResponse("expectativaperfeita.html", {"request": request})

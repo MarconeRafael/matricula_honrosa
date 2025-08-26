@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}Pré-Matrícula Honrosa{% endblock %}</title>
+  <meta name="description" content="Sistema de pré-matrícula — gestão de turmas, professores e preferências dos alunos.">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+  <!-- Prefer system font, fallback stack -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Core styles (clean, neutral, professional) -->
+  <style>
+    :root{
+      --bg: #f6f8fa;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --primary: #0b6cf6;
+      --primary-600: #055ed6;
+      --accent: #06b6d4;
+      --radius: 10px;
+      --container: 1100px;
+      --shadow: 0 6px 24px rgba(12, 18, 32, 0.08);
+      --glass: rgba(255,255,255,0.7);
+      --text: #0f172a;
+    }
+
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #f5f7fb 0%, var(--bg) 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+    }
+
+    /* Skip link for accessibility */
+    .skip-link{
+      position:absolute;
+      left:-10000px;
+      top:auto;
+      width:1px;height:1px;
+      overflow:hidden;
+    }
+    .skip-link:focus{
+      left:1rem; top:1rem; width:auto; height:auto; padding:.5rem .75rem; background:#000; color:#fff; z-index:9999; border-radius:6px;
+    }
+
+    /* Topbar */
+    .topbar{
+      width:100%;
+      background:rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 1px 0 rgba(16,24,40,0.04);
+      border-bottom: 1px solid rgba(15,23,42,0.04);
+    }
+    .topbar-inner{
+      max-width:var(--container);
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+      padding:14px 20px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+      text-decoration:none;
+      color:var(--text);
+    }
+    .brand-logo{
+      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));
+      display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:700;
+      box-shadow:var(--shadow);
+    }
+    .brand-text{ font-weight:600; font-size:1rem; letter-spacing:0.2px; }
+
+    /* Nav */
+    nav.primary{
+      display:flex;
+      gap:.5rem;
+      align-items:center;
+    }
+    nav.primary a{
+      text-decoration:none;
+      color:var(--muted);
+      padding:.5rem .75rem;
+      border-radius:8px;
+      font-weight:600;
+      font-size:.95rem;
+    }
+    nav.primary a:hover{ color:var(--primary-600); background:rgba(11,108,246,0.06); }
+
+    /* Container */
+    .container{
+      max-width:var(--container);
+      width:100%;
+      margin:28px auto;
+      padding:0 20px;
+      flex:1 0 auto;
+    }
+
+    /* Page header */
+    .page-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+      margin-bottom:18px;
+    }
+    .page-title{ font-size:1.5rem; font-weight:700; color:var(--text); }
+    .page-sub{ color:var(--muted); font-size:.95rem; }
+
+    /* Cards grid */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+      gap:18px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(15,23,42,0.03);
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; gap:.5rem; border:0; cursor:pointer;
+      padding:.5rem .9rem; border-radius:8px; font-weight:600; font-size:.95rem;
+    }
+    .btn-primary{ background:var(--primary); color:#fff; box-shadow: 0 8px 24px rgba(11,108,246,0.14); }
+    .btn-ghost{ background:transparent; color:var(--primary-600); border:1px solid rgba(11,108,246,0.08); }
+
+    /* Table (clean) */
+    table.clean{ width:100%; border-collapse:collapse; }
+    table.clean thead th{ text-align:left; color:var(--muted); font-weight:600; padding:10px 12px; font-size:.9rem; }
+    table.clean tbody td{ padding:12px; border-top:1px solid rgba(15,23,42,0.04); }
+
+    /* Footer */
+    footer.site-footer{
+      margin-top:28px;
+      padding:18px 20px;
+      background:transparent;
+      color:var(--muted);
+      text-align:center;
+      font-size:.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width:720px){
+      .topbar-inner{padding:10px;}
+      .brand-text{ display:none; }
+      .page-header{flex-direction:column;align-items:flex-start;gap:.5rem}
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main">Pular para o conteúdo</a>
+
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <a href="/" class="brand" aria-label="Home — Pré-Matrícula Honrosa">
+        <span class="brand-logo">PH</span>
+        <span class="brand-text">Pré-Matrícula Honrosa</span>
+      </a>
+
+      <nav class="primary" role="navigation" aria-label="Navegação principal">
+        <a href="/aluno/">Alunos</a>
+        <a href="/coord/">Coordenação</a>
+        <a href="/professor/">Professores</a>
+        <a href="/view/">Visualizações</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container" role="main" aria-live="polite">
+    <!-- padrão: cada página pode renderizar title/subtitle -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">{% block page_title %}{% endblock %}</div>
+        <div class="page-sub">{% block page_sub %}{% endblock %}</div>
+      </div>
+      <div>
+        {% block page_actions %}{% endblock %}
+      </div>
+    </div>
+
+    {% block content %}
+    <!-- conteúdo das páginas -->
+    <div class="card">
+      <h3>Bem-vindo</h3>
+      <p class="page-sub">Use o painel para navegar pelas seções do sistema.</p>
+    </div>
+    {% endblock %}
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div>Pré-Matrícula Honrosa — Instituto • © 2025</div>
+    <div>Desenvolvido por equipe acadêmica</div>
+  </footer>
+
+  <!-- hooks para scripts específicos das páginas -->
+  {% block scripts %}
+  <script>
+    // pequenos helpers
+    (function(){
+      // detecta links internos e abre no mesmo contexto — placeholder
+      document.addEventListener('click', function(e){
+        var a = e.target.closest && e.target.closest('a');
+        if(!a) return;
+        if(a.hostname === location.hostname) return; // deixa navegador fazer o trabalho
+      });
+    })();
+  </script>
+  {% endblock %}
+</body>
+</html>

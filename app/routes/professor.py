@@ -12,8 +12,7 @@ from app import models
 
 router = APIRouter(prefix="/professor", tags=["professor"])
 
-# Configura Jinja2 para servir HTML do static/
-templates = Jinja2Templates(directory="static")
+templates = Jinja2Templates(directory="app/templates")
 
 DATA_REQ_FILE = Path("data/association_requests.json")
 DATA_REQ_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -67,3 +66,10 @@ def cancel_request(payload: dict):
     new = [r for r in reqs if not (r.get("request_id")==payload["request_id"] and r.get("professor_id")==payload["professor_id"])]
     DATA_REQ_FILE.write_text(json.dumps(new, indent=2))
     return {"status":"cancelled"}
+# ---------- ROTA RAIZ ----------
+@router.get("/", response_class=HTMLResponse)
+def professor_index(request: Request):
+    """
+    Página inicial do professor
+    """
+    return templates.TemplateResponse("solicitacaoturmas.html", {"request": request})
