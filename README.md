@@ -243,9 +243,3 @@ Verifique se `DATABASE_URL` no compose aponta para volume correto.
 * Criar endpoints CRUD para `Aluno` (facilita testes) ou interface de admin.
 
 ---
-
-Se quiser eu já:
-
-* **gero o `Makefile`** com `make run`, `make seed`, `make test`;
-* ou **adapto o backend** para aceitar os blocos do frontend (`SegM` → `M12`) e te passo o diff.
-
