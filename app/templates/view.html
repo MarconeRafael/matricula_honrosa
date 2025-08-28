@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Expectativa Perfeita de Turmas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Expectativa Perfeita de Oferta de Turmas</h1>
+    <p class="text-muted">
+        Esta visualização mostra a demanda agregada dos alunos por turma e horário preferido.
+    </p>
+
+    <div class="mb-3">
+        <button class="btn btn-primary" onclick="carregarExpectativa()">Atualizar</button>
+    </div>
+
+    <div id="alertPlaceholder"></div>
+
+    <table class="table table-bordered table-striped" id="expectativa-table">
+        <thead>
+            <tr>
+                <th>Turma</th>
+                <th>Horário Preferido</th>
+                <th>Total de Alunos</th>
+                <th>Alunos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Linhas serão preenchidas via JS -->
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showAlert(message, type='success') {
+    const alertPlaceholder = document.getElementById('alertPlaceholder');
+    alertPlaceholder.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+}
+
+async function carregarExpectativa() {
+    try {
+        const res = await fetch('/view/expectativa');
+        const data = await res.json();
+
+        const tbody = document.querySelector('#expectativa-table tbody');
+        tbody.innerHTML = '';
+
+        if (!data.aggregated_preferences || data.aggregated_preferences.length === 0) {
+            showAlert('Nenhuma preferência registrada ainda.', 'info');
+            return;
+        }
+
+        data.aggregated_preferences.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.turma_codigo || 'Desconhecida'}</td>
+                <td>${item.horario_preferido}</td>
+                <td>${item.count}</td>
+                <td>${item.alunos.join(', ')}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error(err);
+        showAlert('Erro ao carregar expectativas.', 'danger');
+    }
+}
+
+// Carrega automaticamente ao abrir a página
+document.addEventListener('DOMContentLoaded', carregarExpectativa);
+</script>
+{% endblock %}

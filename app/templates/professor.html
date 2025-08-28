@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil do Professor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Perfil do Professor</h1>
+
+    {% if professor %}
+    <!-- Informações do professor -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">{{ professor.nome }}</h4>
+            <p class="card-text"><strong>ID:</strong> {{ professor.id }}</p>
+            <p class="card-text"><strong>Disciplinas aptas:</strong> {{ professor.disciplinas_aptas }}</p>
+        </div>
+    </div>
+    {% else %}
+        <p class="text-muted">Nenhum professor encontrado.</p>
+    {% endif %}
+
+    <!-- Lista de disciplinas do semestre -->
+    <div class="mb-4">
+        <h3>Disciplinas do Semestre Ativo</h3>
+        {% if disciplinas_semestre %}
+        <table class="table table-striped" id="disciplinas-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Carga Horária</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in disciplinas_semestre %}
+                <tr>
+                    <td>{{ d.id }}</td>
+                    <td>{{ d.codigo }}</td>
+                    <td>{{ d.nome }}</td>
+                    <td>{{ d.carga_horaria }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="solicitar({{ professor.id | default(0) }}, {{ d.id }}, 'adicionar')">Solicitar Adição</button>
+                        <button class="btn btn-sm btn-danger" onclick="solicitar({{ professor.id | default(0) }}, {{ d.id }}, 'remover')">Solicitar Remoção</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="text-muted">Nenhuma disciplina disponível neste semestre.</p>
+        {% endif %}
+    </div>
+
+    <div id="alertPlaceholder"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showAlert(message, type='success') {
+    const alertPlaceholder = document.getElementById('alertPlaceholder');
+    alertPlaceholder.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+}
+
+// Função para solicitar adição ou remoção
+async function solicitar(professor_id, disciplina_id, acao) {
+    if (!professor_id) {
+        showAlert("Nenhum professor selecionado.", "warning");
+        return;
+    }
+    try {
+        const res = await fetch('/professor/solicitar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ professor_id, disciplina_id, acao })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showAlert(`Solicitação enviada com sucesso! ID da requisição: ${data.request_id}`, 'success');
+        } else {
+            showAlert(`Erro: ${data.detail || 'Falha ao enviar solicitação'}`, 'danger');
+        }
+    } catch(err) {
+        console.error(err);
+        showAlert('Erro de conexão com o servidor.', 'danger');
+    }
+}
+</script>
+{% endblock %}

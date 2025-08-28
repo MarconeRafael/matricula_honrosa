@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Questionário de Expectativas - Matrícula Honrosa{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-3">Questionário de Expectativas - Matrícula Honrosa</h1>
+    <p class="text-danger">
+        Aviso: Este preenchimento não garante a oferta final, apenas serve para orientar o planejamento das turmas.
+    </p>
+    <p>Total de horas preenchidas: <span id="total-horas">0</span> / 480h</p>
+
+    <div class="row">
+        <!-- Lista de disciplinas -->
+        <div class="col-md-4">
+            <h4>Disciplinas Disponíveis</h4>
+            <div id="disciplinas-lista" class="list-group">
+                {% if disciplinas_semestre %}
+                    {% for d in disciplinas_semestre %}
+                    <div class="list-group-item disciplina"
+                         draggable="true"
+                         data-id="{{ d.id }}"
+                         data-horas="{{ d.carga_horaria }}">
+                        <strong>{{ d.codigo }}</strong> ({{ d.carga_horaria }}h)
+                        <div class="text-muted">{{ d.nome }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Nenhuma disciplina disponível no semestre.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Grid de horários -->
+        <div class="col-md-8">
+            <h4>Horários - Arraste suas disciplinas</h4>
+            <div class="grid-container" id="grid">
+                {% set dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'] %}
+                {% set turnos = ['M', 'T', 'N'] %}
+                {% for dia in dias %}
+                    {% for turno in turnos %}
+                        <div class="grid-item border rounded p-2 mb-2"
+                             data-dia="{{ dia }}"
+                             data-turno="{{ turno }}">
+                            <small>{{ dia }} {{ turno }}</small>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <button id="salvar-btn" class="btn btn-success mt-3">Salvar Expectativa</button>
+    <div id="alertPlaceholder" class="mt-3"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const disciplinas = document.querySelectorAll('.disciplina');
+    const gridItems = document.querySelectorAll('.grid-item');
+    let totalHoras = 0;
+
+    // Pega aluno_id de forma segura (0 se não existir)
+    const aluno_id = {{ aluno.id | default(0) | tojson }};
+
+    const salvarBtn = document.getElementById('salvar-btn');
+    const alertPlaceholder = document.getElementById('alertPlaceholder');
+
+    // Se não existir aluno válido, desativa salvar e avisa
+    if (!aluno_id || aluno_id === 0) {
+        salvarBtn.disabled = true;
+        const msg = `<div class="alert alert-info" role="alert">
+            Nenhum aluno autenticado/selecionado. Para salvar expectativas informe ou crie um aluno (ex: usar seed_db / API).
+        </div>`;
+        alertPlaceholder.innerHTML = msg;
+    }
+
+    // Drag start
+    disciplinas.forEach(d => {
+        d.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', d.dataset.id);
+        });
+    });
+
+    // Drag over / drop
+    gridItems.forEach(cell => {
+        cell.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            cell.classList.add('bg-light');
+        });
+        cell.addEventListener('dragleave', () => {
+            cell.classList.remove('bg-light');
+        });
+        cell.addEventListener('drop', (e) => {
+            e.preventDefault();
+            cell.classList.remove('bg-light');
+            const id = e.dataTransfer.getData('text/plain');
+            if (!cell.querySelector(`.disciplina[data-id='${id}']`)) {
+                const disciplina = document.querySelector(`.disciplina[data-id='${id}']`);
+                if (disciplina) {
+                    const clone = disciplina.cloneNode(true);
+                    clone.style.cursor = 'default';
+                    clone.classList.add('mb-1');
+                    // limpar atributos de draggable no clone pra não permitir drag duplicado
+                    clone.removeAttribute('draggable');
+                    cell.appendChild(clone);
+                    const horas = parseInt(disciplina.dataset.horas || 0, 10);
+                    if (!isNaN(horas)) {
+                        totalHoras += horas;
+                        document.getElementById('total-horas').innerText = totalHoras;
+                    }
+                }
+            }
+        });
+    });
+
+    // Função para mostrar alertas
+    function showAlert(message, type='success') {
+        alertPlaceholder.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+    }
+
+    // Salvar expectativas
+    salvarBtn.addEventListener('click', async () => {
+        if (!aluno_id || aluno_id === 0) {
+            showAlert("Nenhum aluno válido selecionado. Não é possível salvar.", "danger");
+            return;
+        }
+
+        if (totalHoras > 480) {
+            showAlert("Carga horária máxima excedida (480h)!", "danger");
+            return;
+        }
+
+        const disciplinasDataMap = {};
+
+        gridItems.forEach(cell => {
+            const diaTurno = (cell.dataset.dia || '') + (cell.dataset.turno || '');
+            cell.querySelectorAll('.disciplina').forEach(d => {
+                const tid = d.dataset.id;
+                if (!tid) return;
+                if (!disciplinasDataMap[tid]) {
+                    disciplinasDataMap[tid] = { id: tid, horarios: [] };
+                }
+                disciplinasDataMap[tid].horarios.push(diaTurno);
+            });
+        });
+
+        const disciplinasData = Object.values(disciplinasDataMap);
+
+        try {
+            const res = await fetch('/aluno/salvar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ aluno_id, disciplinas: disciplinasData })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                showAlert(`Expectativa salva! Total de turmas: ${data.total_turmas}, total de horários: ${data.total_horarios}`, "success");
+            } else {
+                showAlert(`Erro: ${data.detail || 'Falha ao salvar'}`, "danger");
+            }
+        } catch (err) {
+            console.error(err);
+            showAlert("Erro de conexão com o servidor.", "danger");
+        }
+    });
+});
+</script>
+{% endblock %}

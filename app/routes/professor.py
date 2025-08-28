@@ -1,23 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from pathlib import Path
-import json
-from uuid import uuid4
-from datetime import datetime
-
 from app.database import SessionLocal
 from app import models
+from pathlib import Path
+import json
+from datetime import datetime
 
 router = APIRouter(prefix="/professor", tags=["professor"])
-
 templates = Jinja2Templates(directory="app/templates")
 
-DATA_REQ_FILE = Path("data/association_requests.json")
-DATA_REQ_FILE.parent.mkdir(parents=True, exist_ok=True)
-if not DATA_REQ_FILE.exists():
-    DATA_REQ_FILE.write_text("[]")
+REQUESTS_FILE = Path("data/association_requests.json")
+REQUESTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+if not REQUESTS_FILE.exists():
+    REQUESTS_FILE.write_text("[]")
 
 def get_db():
     db = SessionLocal()
@@ -26,50 +23,69 @@ def get_db():
     finally:
         db.close()
 
-# ---------- ROTA HTML ----------
-@router.get("/solicitacoes", response_class=HTMLResponse)
-def view_requests(request: Request):
-    """
-    Renderiza a tela de solicitações de associação de turmas.
-    """
-    return templates.TemplateResponse("solicitacaoturmas.html", {"request": request})
 
-# ---------- SOLICITAÇÃO DE ASSOCIAÇÃO ----------
-@router.post("/request_association")
-def request_association(payload: dict):
-    if "professor_id" not in payload or "turma_id" not in payload:
-        raise HTTPException(400, "professor_id e turma_id obrigatórios")
-    reqs = json.loads(DATA_REQ_FILE.read_text())
-    new_req = {
-        "request_id": str(uuid4()),
-        "professor_id": int(payload["professor_id"]),
-        "turma_id": int(payload["turma_id"]),
-        "message": payload.get("message",""),
+# ---------- Rota: exibir perfil do professor ----------
+@router.get("/", response_class=HTMLResponse)
+def professor_profile(request: Request, db: Session = Depends(get_db), professor_id: int = 1):
+    professor = db.query(models.Professor).filter(models.Professor.id == professor_id).first()
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor não encontrado")
+    
+    # Filtro de disciplinas do semestre ativo (placeholder)
+    semestre_ativo = "2025.2"  # Ajuste conforme lógica do seu sistema
+    disciplinas_semestre = db.query(models.Turma).filter(models.Turma.semestre == semestre_ativo).all()
+
+    return templates.TemplateResponse("professor.html", {
+        "request": request,
+        "professor": professor,
+        "disciplinas_semestre": disciplinas_semestre
+    })
+
+
+# ---------- Rota: solicitar adição ou remoção de disciplina ----------
+@router.post("/solicitar")
+async def solicitar(request: Request, db: Session = Depends(get_db)):
+    data = await request.json()
+    
+    # Validação básica do payload
+    required_fields = ["professor_id", "disciplina_id", "acao"]
+    for f in required_fields:
+        if f not in data:
+            raise HTTPException(status_code=400, detail=f"{f} é obrigatório")
+    
+    professor_id = int(data["professor_id"])
+    disciplina_id = int(data["disciplina_id"])
+    acao = data["acao"]
+
+    if acao not in ("adicionar", "remover"):
+        raise HTTPException(status_code=400, detail="acao deve ser 'adicionar' ou 'remover'")
+
+    # Verifica se professor e disciplina existem
+    professor = db.query(models.Professor).get(professor_id)
+    disciplina = db.query(models.Turma).get(disciplina_id)
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor não encontrado")
+    if not disciplina:
+        raise HTTPException(status_code=404, detail="Disciplina não encontrada")
+
+    # Carrega solicitações existentes e adiciona nova
+    all_requests = json.loads(REQUESTS_FILE.read_text())
+    request_id = str(len(all_requests) + 1)  # Simples ID incremental
+    new_request = {
+        "request_id": request_id,
+        "professor_id": professor_id,
+        "disciplina_id": disciplina_id,
+        "acao": acao,
         "status": "pending",
         "created_at": datetime.utcnow().isoformat()
     }
-    reqs.append(new_req)
-    DATA_REQ_FILE.write_text(json.dumps(reqs, indent=2))
-    return {"status": "created", "request_id": new_req["request_id"]}
+    all_requests.append(new_request)
 
-@router.get("/my_requests/{professor_id}")
-def my_requests(professor_id:int):
-    reqs = json.loads(DATA_REQ_FILE.read_text())
-    mine = [r for r in reqs if r.get("professor_id") == professor_id]
-    return mine
+    # Escreve de forma atômica
+    REQUESTS_FILE.write_text(json.dumps(all_requests, indent=2))
 
-@router.delete("/cancel_request")
-def cancel_request(payload: dict):
-    if "request_id" not in payload or "professor_id" not in payload:
-        raise HTTPException(400, "request_id e professor_id obrigatórios")
-    reqs = json.loads(DATA_REQ_FILE.read_text())
-    new = [r for r in reqs if not (r.get("request_id")==payload["request_id"] and r.get("professor_id")==payload["professor_id"])]
-    DATA_REQ_FILE.write_text(json.dumps(new, indent=2))
-    return {"status":"cancelled"}
-# ---------- ROTA RAIZ ----------
-@router.get("/", response_class=HTMLResponse)
-def professor_index(request: Request):
-    """
-    Página inicial do professor
-    """
-    return templates.TemplateResponse("solicitacaoturmas.html", {"request": request})
+    return JSONResponse({
+        "status": "ok",
+        "mensagem": "Solicitação enviada para coordenação.",
+        "request_id": request_id
+    })

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro e Associação de Turmas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Cadastro e Associação de Turmas</h1>
+
+    <!-- Seção de Turmas -->
+    <div class="mb-5">
+        <h3>Turmas</h3>
+        <button class="btn btn-primary mb-2" id="add-turma-btn">Adicionar Turma</button>
+        <table class="table table-striped" id="turmas-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Carga Horária</th>
+                    <th>Precisa Computador</th>
+                    <th>Sala</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Seção de Professores -->
+    <div class="mb-5">
+        <h3>Professores</h3>
+        <button class="btn btn-primary mb-2" id="add-prof-btn">Adicionar Professor</button>
+        <table class="table table-striped" id="profs-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Disciplinas Aptas</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Seção de Salas -->
+    <div class="mb-5">
+        <h3>Salas</h3>
+        <button class="btn btn-primary mb-2" id="add-sala-btn">Adicionar Sala</button>
+        <table class="table table-striped" id="salas-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Capacidade</th>
+                    <th>Computador</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Seção de Solicitações -->
+    <div class="mb-5">
+        <h3>Solicitações de Associação</h3>
+        <table class="table table-striped" id="requests-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Professor</th>
+                    <th>Turma</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="alertPlaceholder"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showAlert(message, type='success') {
+    const alertPlaceholder = document.getElementById('alertPlaceholder');
+    alertPlaceholder.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+}
+
+// Função genérica para criar tabela
+async function fetchAndRender(url, tableId, renderRow) {
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        tbody.innerHTML = '';
+        data.forEach(item => tbody.appendChild(renderRow(item)));
+    } catch(err) {
+        console.error(err);
+        showAlert("Erro ao carregar dados: " + url, "danger");
+    }
+}
+
+// Render row para Turmas
+function renderTurmaRow(t) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${t.id}</td>
+        <td>${t.codigo}</td>
+        <td>${t.carga_horaria}</td>
+        <td>${t.precisa_computador}</td>
+        <td>${t.sala_id || ''}</td>
+        <td>
+            <button class="btn btn-sm btn-danger" onclick="deleteTurma(${t.id})">Excluir</button>
+        </td>`;
+    return tr;
+}
+
+// Render row para Professores
+function renderProfRow(p) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${p.id}</td>
+        <td>${p.nome}</td>
+        <td>${p.disciplinas_aptas}</td>
+        <td>
+            <button class="btn btn-sm btn-danger" onclick="deleteProfessor(${p.id})">Excluir</button>
+        </td>`;
+    return tr;
+}
+
+// Render row para Salas
+function renderSalaRow(s) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${s.id}</td>
+        <td>${s.nome}</td>
+        <td>${s.capacidade}</td>
+        <td>${s.tem_computador}</td>
+        <td>
+            <button class="btn btn-sm btn-danger" onclick="deleteSala(${s.id})">Excluir</button>
+        </td>`;
+    return tr;
+}
+
+// Render row para Requests
+function renderRequestRow(r) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${r.request_id}</td>
+        <td>${r.professor_id}</td>
+        <td>${r.turma_id}</td>
+        <td>${r.status}</td>
+        <td>
+            <button class="btn btn-sm btn-success" onclick="reviewRequest(${r.request_id}, 'approve')">Aprovar</button>
+            <button class="btn btn-sm btn-danger" onclick="reviewRequest(${r.request_id}, 'deny')">Negar</button>
+        </td>`;
+    return tr;
+}
+
+// Delete functions
+async function deleteTurma(id) { await fetch(`/coord/turmas/${id}`, { method:'DELETE' }); loadTurmas(); }
+async function deleteProfessor(id) { await fetch(`/coord/professores/${id}`, { method:'DELETE' }); loadProfs(); }
+async function deleteSala(id) { await fetch(`/coord/salas/${id}`, { method:'DELETE' }); loadSalas(); }
+
+// Review request
+async function reviewRequest(request_id, action) {
+    const res = await fetch('/coord/requests/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id, action })
+    });
+    const data = await res.json();
+    showAlert(`Request ${data.request_id} revisada: ${data.action}`);
+    loadRequests();
+}
+
+// Load all tables
+function loadTurmas() { fetchAndRender('/coord/turmas', 'turmas-table', renderTurmaRow); }
+function loadProfs() { fetchAndRender('/coord/professores', 'profs-table', renderProfRow); }
+function loadSalas() { fetchAndRender('/coord/salas', 'salas-table', renderSalaRow); }
+function loadRequests() { fetchAndRender('/coord/requests', 'requests-table', renderRequestRow); }
+
+// Inicializa
+loadTurmas();
+loadProfs();
+loadSalas();
+loadRequests();
+</script>
+{% endblock %}
